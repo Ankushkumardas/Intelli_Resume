@@ -17,7 +17,7 @@ interface DashboardPageProps {
   onSelectHistoryItem: (item: AnalysisHistoryItem) => void;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ user, selectedHistoryItem, onAnalysisComplete }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ selectedHistoryItem, onAnalysisComplete }) => {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState('');
   const [jobDescription, setJobDescription] = useState('');

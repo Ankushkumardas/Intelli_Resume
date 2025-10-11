@@ -21,7 +21,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ user, history, onSelectHistoryItem }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({  history, onSelectHistoryItem }) => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">

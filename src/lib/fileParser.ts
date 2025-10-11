@@ -1,4 +1,12 @@
-import "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.min.mjs";
+// Make sure to include pdfjs-dist via a <script> tag in your HTML for global usage.
+// import "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.5.136/build/pdf.min.mjs";
+
+declare global {
+  interface Window {
+    mammoth?: any;
+    pdfjsLib?: any;
+  }
+}
 
 /**
  * Parses the content of a file (PDF, DOCX, or TXT) and returns the text content.
@@ -12,7 +20,7 @@ export async function parseFile(file: File): Promise<string> {
   // Handle PDF files
   if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
     try {
-      const pdfjsLib = window.pdfjsLib;
+      const pdfjsLib = window?.pdfjsLib;
       if (!pdfjsLib) throw new Error('pdf.js library is not loaded.');
 
       // Configure the worker source for pdf.js
