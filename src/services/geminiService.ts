@@ -2,9 +2,15 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AnalysisResult } from '../types';
+// In the browser (Vite), environment variables should be accessed via import.meta.env
+// Variables exposed to the client must be prefixed with VITE_. Do NOT store secrets in client-side env vars.
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+if (!apiKey) {
+    // Provide a helpful error for development; in production, handle this on the server instead.
+    throw new Error('Missing VITE_GEMINI_API_KEY. Set it in your .env and restart the dev server, or move API calls to a secure backend.');
+}
 
-
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey });
 
 const responseSchema = {
     type: Type.OBJECT,
