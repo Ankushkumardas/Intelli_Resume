@@ -1,4 +1,3 @@
-// Fix: Implement the DashboardPage component and export it as default to resolve the module error.
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileUpload } from './FileUpload';

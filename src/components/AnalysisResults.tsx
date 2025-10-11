@@ -1,4 +1,3 @@
-// Fix: Implement the AnalysisResults component to display the analysis from the Gemini API.
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Doughnut } from 'react-chartjs-2';
