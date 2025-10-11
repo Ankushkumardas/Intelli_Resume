@@ -1,13 +1,11 @@
 
 
-// Fix: Implement the geminiService to analyze resumes using the Gemini API.
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AnalysisResult } from '../types';
 
-// In browser builds use Vite's import.meta.env. For local server-side usage you can
-// set VITE_GEMINI_API_KEY in an .env file at the project root and Vite will
-// replace import.meta.env.VITE_GEMINI_API_KEY at build time.
-const ai = new GoogleGenAI({ apiKey: "AIzaSyCI8F4PZPvC08FvwJ2zWGUd1ydxvYi2kkI" });
+
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
 const responseSchema = {
     type: Type.OBJECT,
     properties: {
@@ -102,7 +100,6 @@ export async function analyzeResume(resumeText: string, jobDescription: string):
 
     } catch (error) {
         console.error("Error analyzing resume with Gemini API:", error);
-        // Provide a more user-friendly error message
         throw new Error("Failed to analyze the resume. The AI service may be temporarily unavailable. Please try again later.");
     }
 }
