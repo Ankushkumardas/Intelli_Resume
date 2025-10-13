@@ -1,13 +1,13 @@
 
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { AnalysisResult } from '../types';
-// In the browser (Vite), environment variables should be accessed via import.meta.env
-// Variables exposed to the client must be prefixed with VITE_. Do NOT store secrets in client-side env vars.
+import type { AnalysisResult, Suggestion } from '../types';
+
+// Use Vite's env (frontend-safe) prefix VITE_ for environment variables.
+// Note: Putting API keys in frontend env is NOT secure. Prefer a backend.
 const apiKey = 'AIzaSyCI8F4PZPvC08FvwJ2zWGUd1ydxvYi2kkI';
 if (!apiKey) {
-    // Provide a helpful error for development; in production, handle this on the server instead.
-    throw new Error('Missing VITE_GEMINI_API_KEY. Set it in your .env and restart the dev server, or move API calls to a secure backend.');
+    console.warn('VITE_GEMINI_API_KEY is not set. Gemini calls will likely fail. Consider moving API calls to a secure backend.');
 }
 
 const ai = new GoogleGenAI({ apiKey });
@@ -32,7 +32,20 @@ const responseSchema = {
                     type: {
                         type: Type.STRING,
                         description: "The category of the suggestion.",
-                        enum: ['MISSING_KEYWORD', 'IMPROVE_BULLET', 'GRAMMAR', 'QUANTIFY_ACHIEVEMENT', 'FORMATTING', 'GENERAL']
+                        enum: [
+                            'MISSING_KEYWORD',
+                            'IMPROVE_BULLET',
+                            'GRAMMAR',
+                            'QUANTIFY_ACHIEVEMENT',
+                            'FORMATTING',
+                            'GENERAL',
+                            'ADD_SECTION',
+                            'REMOVE_REDUNDANCY',
+                            'UPDATE_CONTACT',
+                            'REORDER_SECTIONS',
+                            'ADD_PROJECT',
+                            'IMPROVE_SUMMARY'
+                        ]
                     },
                     message: {
                         type: Type.STRING,
@@ -45,6 +58,14 @@ const responseSchema = {
                     suggestedText: {
                         type: Type.STRING,
                         description: "Optional. A concrete example of how to rewrite the original text."
+                    },
+                    improvement: {
+                        type: Type.STRING,
+                        description: "Optional. A brief description of the improvement made or suggested."
+                    },
+                    newData: {
+                        type: Type.STRING,
+                        description: "Optional. New data or content to be added to the resume, if applicable."
                     }
                 },
                 required: ["type", "message"]
@@ -95,13 +116,57 @@ export async function analyzeResume(resumeText: string, jobDescription: string):
             throw new Error("No response text received from Gemini API.");
         }
         const jsonText = response.text.trim();
-        const result: AnalysisResult = JSON.parse(jsonText);
-        
-        // Basic validation
-        if (typeof result.overallScore !== 'number' || !result.summary || !Array.isArray(result.suggestions)) {
-            throw new Error("Invalid analysis format received from API.");
+        let parsed: any;
+        try {
+            parsed = JSON.parse(jsonText);
+        } catch (e) {
+            console.warn('Failed to parse JSON from Gemini response, returning safe defaults.', e);
+            parsed = {};
         }
-        
+
+        // Normalize overallScore
+        let overallScore = 0;
+        if (typeof parsed.overallScore === 'number' && !Number.isNaN(parsed.overallScore)) {
+            overallScore = Math.max(0, Math.min(100, Math.round(parsed.overallScore)));
+        } else if (typeof parsed.overallScore === 'string') {
+            const n = Number(parsed.overallScore);
+            if (!Number.isNaN(n)) overallScore = Math.max(0, Math.min(100, Math.round(n)));
+        }
+
+        // Normalize summary
+        const summary = (typeof parsed.summary === 'string' && parsed.summary.trim()) ? parsed.summary.trim() : 'No summary available.';
+
+        // Normalize suggestions array
+        const rawSuggestions = Array.isArray(parsed.suggestions) ? parsed.suggestions : [];
+        const suggestions: Suggestion[] = rawSuggestions.map((s: any) => {
+            // If suggestion isn't an object or missing required fields, skip it by returning null to filter later
+            if (!s || typeof s !== 'object') return null;
+            const type = typeof s.type === 'string' && s.type ? s.type : 'GENERAL';
+            const message = typeof s.message === 'string' && s.message.trim() ? s.message.trim() : '';
+            if (!message) return null; // message is required
+
+            const originalText = (s.originalText === null || s.originalText === undefined) ? null : String(s.originalText);
+            const suggestedText = (s.suggestedText === null || s.suggestedText === undefined) ? undefined : String(s.suggestedText);
+            const improvement = (s.improvement === null || s.improvement === undefined) ? undefined : String(s.improvement);
+            const newData = (s.newData === null || s.newData === undefined) ? undefined : String(s.newData);
+
+            return {
+                type: type as any,
+                message,
+                originalText,
+                suggestedText,
+                // @ts-ignore allow extra fields for now
+                improvement,
+                newData,
+            } as Suggestion;
+        }).filter(Boolean) as Suggestion[];
+
+        const result: AnalysisResult = {
+            overallScore,
+            summary,
+            suggestions,
+        };
+
         return result;
 
     } catch (error) {
