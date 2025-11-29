@@ -5,7 +5,7 @@ import type { AnalysisResult, Suggestion } from '../types';
 
 // Use Vite's env (frontend-safe) prefix VITE_ for environment variables.
 // Note: Putting API keys in frontend env is NOT secure. Prefer a backend.
-const apiKey = 'AIzaSyCI8F4PZPvC08FvwJ2zWGUd1ydxvYi2kkI';
+const apiKey = 'AIzaSyC34q176d5ZqhZ-fvGi1wykjMbCN8SO8I4';
 if (!apiKey) {
     console.warn('VITE_GEMINI_API_KEY is not set. Gemini calls will likely fail. Consider moving API calls to a secure backend.');
 }
